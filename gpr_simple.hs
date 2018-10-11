@@ -17,17 +17,20 @@ f = fs sin
 
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
--- a and b are matrices, param is a real number
--- TODO fs should be column-wise!
+-- a and b are vectors (will be matrices for n-D case), 
+-- param is a real number
 -- should return a matrix (num samples in a by num samples in b)
 -- TODO will have to add values to the diagonal to represent noise
-ker_se a b param =
-  -- TODO
-  -- have to sum across columns for n-dimensional case
-  -- sqdist is calculated very differently in n-dimensions
-  let sqdist = (???)
-  return exp(-0.5 * (1/param) * sqdist) -- won't work because sqdist is dim (n,n)
-
+-- ker_se :: Vector Double -> Vector Double -> Double -> Matrix Double
+-- param = 0.1
+-- a = vector [1..10]
+-- b = vector [3,5..21]
+ker_se a b param = do
+  -- TODO will have to change this significantly for n-dimensional case
+  let aa = repmat (col (toList (a^^2))) 1 10
+  let bb = repmat (row (toList (b^^2))) 10 1
+  let sqdist = aa + bb - 2 * (a `outer` b)
+  return (exp(-0.5 * (1/param) * sqdist))
 
 -- transpose
 -- a = matrix 3 [1..9]
@@ -41,7 +44,7 @@ ker_se a b param =
 --         second_term = sumElements b_pow
 --         third_term = (*) 2 (a Numeric.LinearAlgebra.<> b_trans)
 --         sqdist = ((+) first_term second_term)
-        -- sqdist = (-) ((+) first_term second_term) third_term
-        -- exp_val = (*) ((*) -0.5 (1.0 / 2.0)) sqdist
+--        -- sqdist = (-) ((+) first_term second_term) third_term
+--        -- exp_val = (*) ((*) -0.5 (1.0 / 2.0)) sqdist
 
 -- http://wiki.c2.com/?DotProductInManyProgrammingLanguages
