@@ -1,11 +1,11 @@
--- simple Gaussian Process regression prediction 
+-- simple Gaussian Process regression prediction
 -- this fit is only 1-dimensional, but the final fit will be much more
 -- I think 6-dimensional
 
 import Numeric.LinearAlgebra
 
 -- apply function f across an array
--- TODO might have to change this (or at least in ker_se) to 
+-- TODO might have to change this (or at least in ker_se) to
 -- agree with hmatrix data type
 -- this works with Vector type
 fs f = \xs -> vector [f(x) | x <- toList xs]
@@ -18,12 +18,30 @@ f = fs sin
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
 -- a and b are matrices, param is a real number
--- TODO fs should be column-wise! 
+-- TODO fs should be column-wise!
 -- should return a matrix (num samples in a by num samples in b)
 -- TODO will have to add values to the diagonal to represent noise
-ker_se a b param = 
+ker_se a b param =
   -- TODO
   -- have to sum across columns for n-dimensional case
   -- sqdist is calculated very differently in n-dimensions
   let sqdist = (???)
   return exp(-0.5 * (1/param) * sqdist) -- won't work because sqdist is dim (n,n)
+
+
+-- transpose
+-- a = matrix 3 [1..9]
+-- sumElements isn't what I want right now
+-- need to probably implement something simliar to np.sum
+-- kernel a b  = expm (sqdist)
+--   where a_pow = (^^) a 2
+--         b_pow = (^^) b 2
+--         b_trans = (tr' b)
+--         first_term = flatten (sumElements a_pow)
+--         second_term = sumElements b_pow
+--         third_term = (*) 2 (a Numeric.LinearAlgebra.<> b_trans)
+--         sqdist = ((+) first_term second_term)
+        -- sqdist = (-) ((+) first_term second_term) third_term
+        -- exp_val = (*) ((*) -0.5 (1.0 / 2.0)) sqdist
+
+-- http://wiki.c2.com/?DotProductInManyProgrammingLanguages
