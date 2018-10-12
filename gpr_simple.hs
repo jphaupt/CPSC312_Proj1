@@ -27,8 +27,8 @@ f = fs sin
 -- b = vector [3,5..21]
 ker_se a b param = do
   -- TODO will have to change this significantly for n-dimensional case
-  let aa = repmat (col (toList (a^^2))) 1 10
-  let bb = repmat (row (toList (b^^2))) 10 1
+  let aa = repmat (col (toList (a^^2))) 1 (size b)
+  let bb = repmat (row (toList (b^^2))) (size a) 1
   let sqdist = aa + bb - 2 * (a `outer` b)
   return (exp(-0.5 * (1/param) * sqdist))
 
