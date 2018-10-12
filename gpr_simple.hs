@@ -4,16 +4,40 @@
 
 import Numeric.LinearAlgebra
 
+-- initialise random number generator
+-- g = getStdGen 
+-- TODO make seed different each function call? somehow?
+seed = 7 -- for reproducibility
+
+
 -- apply function f across an array
 -- TODO might have to change this (or at least in ker_se) to
 -- agree with hmatrix data type
 -- this works with Vector type
 fs f = \xs -> vector [f(x) | x <- toList xs]
 
+-- play with these parameters (and function)
 -- predict this function (with some noise)
 -- need to first "flatten" data TODO
--- TODO add noise, where to sample, etc.
 f = fs sin
+n_train = 10 -- number of training points
+n_test = 50 -- number of testing points
+s = 0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
+
+-- get a random matrix based on your seed 
+-- r c are number of rows and columns
+-- seed is the random seed
+-- dist is the distribution (e.g. Uniform), from System.Random
+-- TODO not sure when this will be needed, but thought it was helpful
+randMat r c seed dist = reshape c $ randomVector seed dist (r*c)
+
+-- get random dataset for problem
+-- xset is a vector of numbers uniformly sampled from -5 to 5 
+-- TODO generalise this, I guess
+xset = 10*(randomVector seed Uniform n_train)-5
+-- add noise with mean 0, std s, Gaussian distributed
+-- TODO make distribution more general?
+yset = f (xset + s * randomVector seed Gaussian n_train)
 
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
