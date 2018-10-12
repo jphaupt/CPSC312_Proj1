@@ -51,12 +51,13 @@ yset = f (xset + s * randomVector seed Gaussian n_train)
 -- param = 0.1
 -- a = vector [1..10]
 -- b = vector [3,5..21]
+ker_se :: Monad m => Vector R -> Vector R -> Matrix R -> m (Matrix R)
 ker_se a b param = do
   -- TODO will have to change this significantly for n-dimensional case
   let aa = repmat (col (toList (a^^2))) 1 (size b)
   let bb = repmat (row (toList (b^^2))) (size a) 1
   let sqdist = aa + bb - 2 * (a `outer` b)
-  return (exp(-0.5 * (1/param) * sqdist))
+  return (exp (-0.5 * (1/param) * sqdist))
 
 -- k = ker_se xset xset 0.1
 -- TODO: Somehow convert ker_se to Matrix R type instead of Matrix Double
