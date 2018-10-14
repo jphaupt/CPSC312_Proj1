@@ -5,6 +5,8 @@
 import Numeric.LinearAlgebra as NLA
 import Graphics.Rendering.Chart.Easy
 import Graphics.Rendering.Chart.Backend.Cairo
+import Data.Random.Normal
+import System.Random
 
 -- initialise random number generator
 -- g = getStdGen
@@ -120,6 +122,21 @@ mean_pred = toFile def "mean_pred.png" $ do
 new_iden = diagl (replicate n_test 0.000001)
 Just prior_ch = mbChol (mTm (k_test + new_iden))
 new_l = cholSolve prior_ch (k_test + new_iden)
+
+-- testing = do
+--   let vals = take 4 (mkNormals 10831452)
+--   let m = (4><1) vals
+--   return m
+-- generate_samples n = do
+--   myRandomGen <- getStdGen
+--   let myRandomGen = mkStdGen 3
+--   let vals = take n (normals myRandomGen)
+--   (n_test><10) vals
+-- myRandomGen <- getStdGen
+-- myRandomGen = mkStdGen 3
+-- samples = take 5 generate_samples
+-- samples = take (n_test (*) 10) (normals myRandomGen)
+-- m = matrix (n_test><10) samples
 -- f_prior =
 
 -- prior = toFile def "prior.png" $ do
