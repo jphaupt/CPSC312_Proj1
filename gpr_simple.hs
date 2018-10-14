@@ -23,8 +23,8 @@ f = fs sin
 n_train = 10 -- number of training points
 n_test :: Num p => p
 n_test = 50 -- number of testing points
-s :: Fractional p => p
-s = 0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
+s_noise :: Fractional p => p
+s_noise = 0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
 
 -- get a random matrix based on your seed
 -- r c are number of rows and columns
@@ -39,7 +39,7 @@ randMat r c seed dist = reshape c $ randomVector seed dist (r*c)
 xset = 10*(randomVector seed Uniform n_train)-5
 -- add noise with mean 0, std s, Gaussian distributed
 -- TODO make distribution more general?
-yset = f (xset + s * randomVector seed Gaussian n_train)
+yset = f (xset + s_noise * randomVector seed Gaussian n_train)
 
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
@@ -51,45 +51,46 @@ yset = f (xset + s * randomVector seed Gaussian n_train)
 -- param = 0.1
 -- a = vector [1..10]
 -- b = vector [3,5..21]
-ker_se :: Monad m => Vector R -> Vector R -> Matrix R -> m (Matrix R)
+-- ker_se :: Monad m => Vector R -> Vector R -> Matrix R -> m (Matrix R)
+ker_se :: Vector Double -> Vector Double -> Matrix Double -> Matrix R
 ker_se a b param = do
   -- TODO will have to change this significantly for n-dimensional case
   let aa = repmat (col (toList (a^^2))) 1 (size b)
   let bb = repmat (row (toList (b^^2))) (size a) 1
   let sqdist = aa + bb - 2 * (a `outer` b)
-  return (exp (-0.5 * (1/param) * sqdist))
+  (exp (-0.5 * (1/param) * sqdist))
 
--- k = ker_se xset xset 0.1
--- TODO: Somehow convert ker_se to Matrix R type instead of Matrix Double
--- k = matrix 10 [1..100]
--- n_train = 10
--- let s_m_iden_n = diagl (replicate n_train s)
--- let Just ch = mbChol (mTm (k + s_m_iden_n))
--- let l = cholSolve ch (k + s_m_iden_n)
+-- sample some input points and noisy versions of the function at these points
+ker_val = 0.1
+k = ker_se xset xset ker_val
+s_m_iden_n = diagl (replicate n_train s_noise)
+Just ch = mbChol (mTm (k + s_m_iden_n))
+l = cholSolve ch (k + s_m_iden_n)
 
--- let x_test = linspace n_test (-5,5::Double)
--- let k_t = ker_se xset x_test 0.1
--- TODO: once conversion is done from previous todo, this will work
--- let lk = linearSolve l k_t
--- let ly = linearSolve l yset
--- let mu = (tr lk) <> ly
+-- points we make the prediction at
+x_test = linspace n_test (-5,5::Double)
 
--- let big_k = ker_se x_test x_test
+-- computing the mean at our points
+k_t = ker_se xset x_test 0.1
+Just lk = linearSolve l k_t
+y_matrix = col (toList yset)
+Just ly = linearSolve l y_matrix
+mu = (tr lk) Numeric.LinearAlgebra.<> ly
 
--- a = vector [1..10]
--- b = vector [3,5..21]
--- k = ker_se a b 0.1
--- transpose
--- a = matrix 3 [1..9]
--- sumElements isn't what I want right now
--- need to probably implement something simliar to np.sum
--- kernel a b  = expm (sqdist)
---   where a_pow = (^^) a 2
---         b_pow = (^^) b 2
---         b_trans = (tr' b)
---         first_term = flatten (sumElements a_pow)
---         second_term = sumElements b_pow
---         third_term = (*) 2 (a Numeric.LinearAlgebra.<> b_trans)
---         sqdist = ((+) first_term second_term)
---        -- sqdist = (-) ((+) first_term second_term) third_term
---        -- exp_val = (*) ((*) -0.5 (1.0 / 2.0)) sqdist
+-- computing the variance at our test points
+k_test = ker_se x_test x_test ker_val
+(k_t_x, k_t_y) = size k_test
+k_test_diag = col (replicate k_t_x 1)
+lk_2_sum = matrix_col_sum (lk ^^ 2)
+s2 = k_test_diag - lk_2_sum
+s = sqrt s2
+
+-- Helper functions
+matrix_col_sum m = do
+  let (_, c) = size m
+  let f_list = map (\i -> sum_helper m i) [0..(c-1)]
+  col f_list
+
+sum_helper m i = do
+  let col = m ¿ [i]
+  sum (toList (flatten col))
