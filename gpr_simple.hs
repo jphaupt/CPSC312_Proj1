@@ -23,12 +23,16 @@ fs f = \xs -> vector [f(x) | x <- toList xs]
 -- play with these parameters (and function)
 -- predict this function (with some noise)
 -- need to first "flatten" data TODO
-f = fs sin
+f = fs (\x -> sin(1/(5*x)))
 n_train = 11 -- number of training points
 n_test :: Num p => p
 n_test = 50 -- number of testing points
 s_noise :: Fractional p => p
-s_noise = 0--0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
+s_noise = 0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
+x_start :: Fractional p => p
+x_start = 0.01
+x_fin :: Fractional p => p
+x_fin = 1
 
 -- get a random matrix based on your seed
 -- r c are number of rows and columns
@@ -40,11 +44,11 @@ randMat r c seed dist = reshape c $ randomVector seed dist (r*c)
 -- get random dataset for problem
 -- xset is a vector of numbers uniformly sampled from -5 to 5
 -- TODO generalise this, I guess
--- xset = 10*(randomVector seed Uniform n_train)-5
-xset = NLA.vector [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+xset = (x_fin-x_start)*(randomVector seed Uniform n_train)+x_start
+-- xset = NLA.vector [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 -- add noise with mean 0, std s, Gaussian distributed
 -- TODO make distribution more general?
-yset = f xset-- + s_noise * randomVector seed Gaussian n_train
+yset = f xset + s_noise * randomVector seed Gaussian n_train
 
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
@@ -75,7 +79,8 @@ l = tr lt
 --l = cholSolve ch (k + s_m_iden_n)
 
 -- points we make the prediction at
-x_test = linspace n_test (-5,5::Double)
+--x_test = linspace n_test (-5,5::Double)
+x_test = linspace n_test (x_start, x_fin)
 
 -- computing the mean at our points
 k_t = ker_se xset x_test ker_val
