@@ -1,13 +1,18 @@
 import Data.List.Split
 import Numeric.LinearAlgebra
+import Data.String.Utils
 
 calculateLines s lines =
   do
-    let y = convertToFloat (head (tail (splitOn "    " (lines !! (s+1)))))
-    let h1 = tail (splitOn "    " (lines !! (s+2)))
-    let h2 = tail (splitOn "    " (lines !! (s+3)))
-    let h3 = tail (splitOn "    " (lines !! (s+4)))
-    let o = tail (splitOn "    " (lines !! (s+5)))
+    let y = convertToFloat (head (splitWs (lines !! (s+1))))
+    let h1 = tail (splitWs (lines !! (s+2)))
+    let h2 = tail (splitWs (lines !! (s+3)))
+    let h3 = tail (splitWs (lines !! (s+4)))
+    let o = tail (splitWs (lines !! (s+5)))
+    let h1 = tail (splitOn "   " (lines !! (s+2)))
+    let h2 = tail (splitOn "   " (lines !! (s+3)))
+    let h3 = tail (splitOn "   " (lines !! (s+4)))
+    let o = tail (splitOn "   " (lines !! (s+5)))
     return [y, calDist h1 h2, calDist h1 h3, calDist h1 o, calDist h2 h3, calDist h2 o, calDist h3 o]
 
 
@@ -28,7 +33,7 @@ readcsv filename =
 -- readcsv "test.csv"
 
 convertToFloat s = read s :: Float
-calDist [x1, y1, z1] [x2, y2, z2] = sqrt (x'*x' + y'*y' + z'+z')
+calDist [x1, y1, z1] [x2, y2, z2] = sqrt (x'*x' + y'*y' + z'*z')
     where
       x' = convertToFloat(x1) - convertToFloat(x2)
       y' = convertToFloat(y1) - convertToFloat(y2)
