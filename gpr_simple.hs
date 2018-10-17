@@ -123,6 +123,8 @@ f_prior = new_l NLA.<> rand_matr
 
 -- TODO: clean up this code if possible (tried lambda function implementation, but failed)
 -- TODO plot more generally, not just if 10 cols
+f_prior_2plot = [toList (flatten (f_prior ¿ [i])) | i <- [0..n_train-1]]
+{-
 prior_0_col = (toList (flatten (f_prior ¿ [0])))
 prior_1_col = (toList (flatten (f_prior ¿ [1])))
 prior_2_col = (toList (flatten (f_prior ¿ [2])))
@@ -133,7 +135,10 @@ prior_6_col = (toList (flatten (f_prior ¿ [6])))
 prior_7_col = (toList (flatten (f_prior ¿ [7])))
 prior_8_col = (toList (flatten (f_prior ¿ [8])))
 prior_9_col = (toList (flatten (f_prior ¿ [9])))
+-}
 
+prior_2plot = [pairing (toList x_test) (f_prior_2plot !! i) | i <- [0..n_train-1]]
+{-
 prior_0 = pairing (toList x_test) prior_0_col
 prior_1 = pairing (toList x_test) prior_1_col
 prior_2 = pairing (toList x_test) prior_2_col
@@ -144,9 +149,13 @@ prior_6 = pairing (toList x_test) prior_6_col
 prior_7 = pairing (toList x_test) prior_7_col
 prior_8 = pairing (toList x_test) prior_8_col
 prior_9 = pairing (toList x_test) prior_9_col
+-}
 
+-- plot *all* priors
 f_prior_graph = toFile def "f_prior.png" $ do
   layout_title .= "Ten samples from the GP prior"
+  plot_helper "prior" prior_2plot (n_train-1)
+{-
   plot (line "prior_0" [prior_0])
   plot (line "prior_1" [prior_1])
   plot (line "prior_2" [prior_2])
@@ -157,6 +166,7 @@ f_prior_graph = toFile def "f_prior.png" $ do
   plot (line "prior_7" [prior_7])
   plot (line "prior_8" [prior_8])
   plot (line "prior_9" [prior_9])
+-}
 
 
 -- draw samples from the posterior
@@ -171,6 +181,8 @@ f_posterior = mu - (new_l_post NLA.<> rand_matr_post)
 
 -- TODO: clean up this code if possible (tried lambda function implementation, but failed)
 -- TODO use something resembling a loop, I guess? Need more
+f_post_2plot = [toList (flatten (f_posterior ¿ [i])) | i <- [0..n_train-1]]
+{-
 posterior_0_col = (toList (flatten (f_posterior ¿ [0])))
 posterior_1_col = (toList (flatten (f_posterior ¿ [1])))
 posterior_2_col = (toList (flatten (f_posterior ¿ [2])))
@@ -181,7 +193,10 @@ posterior_6_col = (toList (flatten (f_posterior ¿ [6])))
 posterior_7_col = (toList (flatten (f_posterior ¿ [7])))
 posterior_8_col = (toList (flatten (f_posterior ¿ [8])))
 posterior_9_col = (toList (flatten (f_posterior ¿ [9])))
+-}
 
+post_2plot = [pairing (toList x_test) (f_post_2plot !! i) | i <- [0..n_train-1]]
+{-
 posterior_0 = pairing (toList x_test) posterior_0_col
 posterior_1 = pairing (toList x_test) posterior_1_col
 posterior_2 = pairing (toList x_test) posterior_2_col
@@ -192,9 +207,13 @@ posterior_6 = pairing (toList x_test) posterior_6_col
 posterior_7 = pairing (toList x_test) posterior_7_col
 posterior_8 = pairing (toList x_test) posterior_8_col
 posterior_9 = pairing (toList x_test) posterior_9_col
+-}
 
+-- plot *all* posteriors 
 f_posterior_graph = toFile def "f_posterior.png" $ do
-  layout_title .= "Ten samples from the GP posterior"
+  layout_title .= "samples from the GP posterior"
+  plot_helper "posterior" post_2plot (n_train-1)
+{-  
   plot (line "posterior_0" [posterior_0])
   plot (line "posterior_1" [posterior_1])
   plot (line "posterior_2" [posterior_2])
@@ -205,6 +224,7 @@ f_posterior_graph = toFile def "f_posterior.png" $ do
   plot (line "posterior_7" [posterior_7])
   plot (line "posterior_8" [posterior_8])
   plot (line "posterior_9" [posterior_9])
+-}
 
 -- Helper functions
 -- It will produce a matrix that sums up all the columns together
@@ -220,5 +240,13 @@ sum_helper m i = do
   let col = m ¿ [i]
   sum (toList (flatten col))
 
+-- pairs elements in two lists
 pairing :: [a] -> [b] -> [(a, b)]
 pairing xs ys = [ (x,y) | (x,y) <- zip xs ys]
+
+-- plot first n items of lst (set of pairs like prior_2plot) 
+-- and call each plot str0, str1, etc.
+plot_helper str lst 0 = plot (line (str ++ (show 0)) [lst !! 0])
+plot_helper str lst n = do
+  plot (line (str ++ (show n)) [lst !! n])
+  plot_helper str lst (n-1)
