@@ -112,19 +112,17 @@ mean_pred = toFile def "mean_pred.png" $ do
   plot (line "x_test against f(x_test)" [x_fxt_p])
   plot (line "x_set against average" [x_mu_p])
 
-{-
-
-
-
-
 -- draw samples from the prior
+-- TODO figure out what the last parameter (0.000001) is for
 new_iden = diagl (replicate n_test 0.000001)
-Just prior_ch = mbChol (trustSym (new_iden))
-new_l = cholSolve prior_ch (k_test + new_iden)
-rand_matr = randMat n_test 10 2342432322 Gaussian
+Just prior_ch = mbChol (trustSym (k_test + new_iden))
+new_l = tr prior_ch
+-- cholSolve prior_ch (k_test + new_iden)
+rand_matr = randMat n_test n_train 2342432322 Gaussian
 f_prior = new_l NLA.<> rand_matr
 
 -- TODO: clean up this code if possible (tried lambda function implementation, but failed)
+-- TODO plot more generally, not just if 10 cols
 prior_0_col = (toList (flatten (f_prior ¿ [0])))
 prior_1_col = (toList (flatten (f_prior ¿ [1])))
 prior_2_col = (toList (flatten (f_prior ¿ [2])))
@@ -160,13 +158,19 @@ f_prior_graph = toFile def "f_prior.png" $ do
   plot (line "prior_8" [prior_8])
   plot (line "prior_9" [prior_9])
 
+
 -- draw samples from the posterior
 lk_dot = (tr' lk) NLA.<> lk
-Just posterior_ch = mbChol (trustSym (new_iden - lk_dot))
-new_l_post = cholSolve posterior_ch (k_test + new_iden - lk_dot)
-f_posterior = mu - (new_l_post NLA.<> rand_matr)
+Just posterior_ch = mbChol (trustSym (k_test + new_iden - lk_dot))
+new_l_post = tr posterior_ch
+--cholSolve posterior_ch (k_test + new_iden - lk_dot)
+-- this should be a different rand_matr!
+-- TODO get a new seed each time?
+rand_matr_post = randMat n_test n_train 232432322 Gaussian
+f_posterior = mu - (new_l_post NLA.<> rand_matr_post)
 
 -- TODO: clean up this code if possible (tried lambda function implementation, but failed)
+-- TODO use something resembling a loop, I guess? Need more
 posterior_0_col = (toList (flatten (f_posterior ¿ [0])))
 posterior_1_col = (toList (flatten (f_posterior ¿ [1])))
 posterior_2_col = (toList (flatten (f_posterior ¿ [2])))
@@ -201,7 +205,7 @@ f_posterior_graph = toFile def "f_posterior.png" $ do
   plot (line "posterior_7" [posterior_7])
   plot (line "posterior_8" [posterior_8])
   plot (line "posterior_9" [posterior_9])
--}
+
 -- Helper functions
 -- It will produce a matrix that sums up all the columns together
 -- m is a Matrix R
