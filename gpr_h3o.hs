@@ -19,7 +19,7 @@ fs f = \xs -> vector [f(x) | x <- toList xs]
 -- predict this function (with some noise)
 f = fs (\x -> sin(1/(5*x)))
 n_test :: Num p => p
-n_test = 50 -- number of testing points
+n_test = 9000 -- number of testing points
 s_noise :: Fractional p => p
 s_noise = 0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
 ker_val = 0.1
@@ -66,7 +66,7 @@ main = do
 
   -- returns predicted zero-point energy, its standard deviation, the conformation,
   -- and (to compare) the conformations of all input with their energies
-  return (zpe, s_l !! arg_zpe, xset ? [arg_zpe], xset, yset)
+  return (zpe, s_l !! arg_zpe, x_test ? [arg_zpe], xset, yset)
 
 -- ***** HELPER FUNCTIONS *****
 -- squared exponential kernel
