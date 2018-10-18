@@ -10,7 +10,7 @@ Hydronium data can be found here: https://scholarblogs.emory.edu/bowman/potentia
 In GPR we assume that the prior of any regression function is described by a Gaussian process. We leave out the details here, but for a description of the technique, see (for example), Kevin Murphy's *Machine Learning: A Probabilistic Perspective*, chapter 15. 
 
 ## 1-D GPR
-gpr_simple.hs contains code where you may alter some function and add noise to it. It selects points on this function at random as training, and then does a Gaussian Process Regression fit on evenly dispersed points. Running mean_pred after produces the graph, e.g. as show in mean_pred.png. It also computes the standard deviation at each point sampled. Predictions are very reasonable and GPR works as intended.
+gpr_simple.hs contains code where you may alter some function and add noise to it. It selects points on this function at random as training, and then does a Gaussian Process Regression fit on evenly dispersed points. Running mean_pred after produces the graph, e.g. as show in mean_pred.png. You can also visualize the priors and posteriors by running f_prior_graph and f_posterior_graph respectively. It also computes the standard deviation at each point sampled and stores them. Predictions are very reasonable and GPR works as intended. The example shown is a famous curve known as the topologist's sine curve. 
 
 ## Hydronium GPR
 ParseData.hs is a module for reading data from the link above (just must convert the .xyz file into .txt). It reads each line, and then calculates the following distances: H1 to H2, H1 to H3, H1 to O, H2 to H3, H2 to O, and H3 to O. This is then fed to gpr_h3o.hs which performs GPR and makes predictions.
