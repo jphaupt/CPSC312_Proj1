@@ -12,11 +12,6 @@ import ParseData
 -- initialise random number generator
 seed = 7 -- for reproducibility
 
--- get data from text file provided by Professor Krems
-readDat file = do
-  dat <- readcsv file
-  return (dat ¿ [0], dat ¿ [1,2,3,4,5,6]) -- (yset, xset)
-
 -- apply function f across an array
 fs f = \xs -> vector [f(x) | x <- toList xs]
 
@@ -31,16 +26,20 @@ ker_val = 0.1
 
 -- ***** MAIN FUNCTION *****
 main = do
-  dat <- readcsv "h3o_snippet.txt"
-  let xset = dat ¿ [1..6] -- TODO ? generality
+  -- read data from Krems group (NOTE: small subset!)
+  dat <- readcsv "../h3o_snippet.txt"
+  let d = d1-1 where (_, d1) = size dat
+  let xset = dat ¿ [1..d]
   let yset = dat ¿ [0]
-  let (n_train, d) = size xset
+  let (n_train, _) = size xset
+
   -- sample some input points and noisy versions of the function at these points
   let k = ker_se xset xset ker_val
 
   let s_m_iden_n = diagl (replicate n_train s_noise)
   let Just lt = mbChol (trustSym (k + s_m_iden_n))
   let l = tr lt
+
   let x_maxs = [maximum (toList (flatten (xset ¿ [i]))) | i <- [0..d-1]]
   let x_mins = [minimum (toList (flatten (xset ¿ [i]))) | i <- [0..d-1]]
 
@@ -55,10 +54,8 @@ main = do
 
   -- computing the variance at our test points
   let k_test = ker_se x_test x_test ker_val
-  let (k_t_x, k_t_y) = size k_test
-  let k_test_diag = col (replicate k_t_x 1)
   let lk_2_sum = matrix_col_sum (lk ^^ 2)
-  let s2 = k_test_diag - lk_2_sum
+  let s2 = asColumn (takeDiag k_test) - lk_2_sum
   let s = sqrt s2
   let s_l = toList (flatten s)
 
@@ -67,7 +64,6 @@ main = do
   -- . is function composition
   let arg_zpe = head $ filter ((== zpe) . (mu_l !!)) [0..]
 
-  -- TODO ? I guess ? plot
   -- returns predicted zero-point energy, its standard deviation, the conformation,
   -- and (to compare) the conformations of all input with their energies
   return (zpe, s_l !! arg_zpe, xset ? [arg_zpe], xset, yset)
@@ -75,9 +71,9 @@ main = do
 -- ***** HELPER FUNCTIONS *****
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
--- a and b are vectors (will be matrices for n-D case),
+-- a and b are matrices,
 -- param is a real number
--- should return a matrix (num samples in a by num samples in b)
+-- returns a matrix (num samples in a by num samples in b)
 ker_se a b param = do
   let a_sum = flatten (matrix_row_sum (a^^2))
   let b_sum = flatten (matrix_row_sum (b^^2))
@@ -86,7 +82,7 @@ ker_se a b param = do
   let sqdist = aa + bb - 2 * (a NLA.<> (tr b))
   (exp (-0.5 * (1/param) * sqdist))
 
--- It will produce a matrix that sums up all the columns together
+-- produces a matrix that sums up all the columns together
 -- m is a Matrix R
 matrix_col_sum :: NLA.Matrix R -> NLA.Matrix R
 matrix_col_sum m = do
@@ -94,7 +90,7 @@ matrix_col_sum m = do
   let f_list = map (\i -> sum_col_helper m i) [0..(c-1)]
   col f_list
 
--- It will produce a matrix that sums up all the row together
+-- produces a matrix that sums up all the row together
 matrix_row_sum :: NLA.Matrix R -> NLA.Matrix R
 matrix_row_sum m = do
   let (r, _) = size m

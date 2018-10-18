@@ -53,10 +53,8 @@ mu = (tr lk) NLA.<> ysol
 
 -- computing the variance at our test points
 k_test = ker_se x_test x_test ker_val
-(k_t_x, k_t_y) = size k_test
-k_test_diag = col (replicate k_t_x 1)
 lk_2_sum = matrix_col_sum (lk ^^ 2)
-s2 = k_test_diag - lk_2_sum
+s2 = asColumn (takeDiag k_test) - lk_2_sum
 s = sqrt s2
 
 -- prepare for plots
@@ -107,10 +105,10 @@ f_posterior_graph = toFile def "f_posterior.png" $ do
 
 -- ***** FUNCTIONS *****
 -- squared exponential kernel
--- a and b are datasets, param is the kernel parameters
--- a and b are vectors (will be matrices for n-D case),
+-- a and b are datasets, param is the kernel parameter
+-- a and b are vectors,
 -- param is a real number
--- should return a matrix (num samples in a by num samples in b)
+-- returns a matrix (num samples in a by num samples in b)
 ker_se :: NLA.Vector Double -> NLA.Vector Double -> NLA.Matrix Double -> NLA.Matrix R
 ker_se a b param = do
   let aa = repmat (col (toList (a^^2))) 1 (size b)
