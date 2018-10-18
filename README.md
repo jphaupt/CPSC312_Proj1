@@ -2,7 +2,9 @@
 Gaussian Process Regression (GPR), written in Haskell, written generally, and more specifically applied to predicting the energy of Hydronium (H3O+) based on energies at specific molecular configurations. 
 
 Hydronium data can be found here: https://scholarblogs.emory.edu/bowman/potential-energy-surfaces/
+
 *note* only use some of the data there, as our optimization routine is very simple (just a linear system solver), so we could only work with a subset. We used 3000 test samples (18000 lines). 
+
 *note* I was asked to link to, instead of rehost, the data. It is in a .xyz format, but the program (see gpr_h3o.hs) assumes it to be converted to .txt format and moved to the preceding folder.
 
 In GPR we assume that the prior of any regression function is described by a Gaussian process. We leave out the details here, but for a description of the technique, see (for example), Kevin Murphy's *Machine Learning: A Probabilistic Perspective*, chapter 15. 
@@ -23,7 +25,7 @@ Since the conformation/physics is determined only by the distance of the atoms t
 *Main> conform
 (1><6)
  [ 1.6000336212676844, 1.602189102338542, 0.9745700247325499, 1.591470956087909, 0.9816657038677272, 0.9845002110474843 ]
-*Main> 
+
 ```
 
-This is very close to the *ab-initio* prediction of about 1.6e-4 hartree.
+This is very close to the *ab-initio* prediction of about 1.6e-4 hartree. This would be improved by doing a rigorous grid-search, Monte Carlo random sampling, and by doing steepest descent instead of LinearSolve. 
