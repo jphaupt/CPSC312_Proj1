@@ -64,6 +64,7 @@ x_y_p = pairing (toList xset) (toList yset)
 x_fxt_p = pairing (toList x_test) (toList (f (x_test)))
 x_mu_p = pairing (toList x_test) (toList (flatten mu))
 
+-- ***** PLOTTING FUNCTIONS *****
 -- plot
 mean_pred = toFile def "mean_pred.png" $ do
   layout_title .= "Mean predictions"
@@ -122,11 +123,11 @@ ker_se a b param = do
 matrix_col_sum :: NLA.Matrix R -> NLA.Matrix R
 matrix_col_sum m = do
   let (_, c) = size m
-  let f_list = map (\i -> sum_helper m i) [0..(c-1)]
+  let f_list = map (\i -> sum_col_helper m i) [0..(c-1)]
   col f_list
 
 -- Sums up a specific column in the matrix
-sum_helper m i = do
+sum_col_helper m i = do
   let col = m ¿ [i]
   sum (toList (flatten col))
 
@@ -138,7 +139,6 @@ pairing xs ys = [ (x,y) | (x,y) <- zip xs ys]
 -- r c are number of rows and columns
 -- seed is the random seed
 -- dist is the distribution (e.g. Uniform), from System.Random
--- TODO not sure when this will be needed, but thought it was helpful
 randMat r c seed dist = reshape c $ randomVector seed dist (r*c)
 
 -- plot first n items of lst (set of pairs like prior_2plot)
