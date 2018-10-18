@@ -28,4 +28,4 @@ Since the conformation/physics is determined only by the distance of the atoms t
 
 ```
 
-This is very close to the *ab-initio* prediction of about 1.6e-4 hartree. This would be improved by doing a rigorous grid-search, Monte Carlo random sampling, and by doing steepest descent instead of LinearSolve. 
+This is very close to the *ab-initio* prediction of about 1.6e-4 hartree. This would be improved by doing a rigorous grid-search, Monte Carlo random sampling, and by doing steepest descent instead of LinearSolve (had there been more time). 
