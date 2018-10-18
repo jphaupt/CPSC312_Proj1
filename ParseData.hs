@@ -30,7 +30,7 @@ readcsv filename =
 -- try:
 -- readcsv "test.csv"
 
-convertToFloat s = read s :: Float
+convertToFloat s = read s :: R
 calDist [x1, y1, z1] [x2, y2, z2] = sqrt (x'*x' + y'*y' + z'*z')
     where
       x' = convertToFloat(x1) - convertToFloat(x2)

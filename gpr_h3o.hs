@@ -29,15 +29,15 @@ fs f = \xs -> vector [f(x) | x <- toList xs]
 -- play with these parameters (and function)
 -- predict this function (with some noise)
 f = fs (\x -> sin(1/(5*x)))
-n_train = 11 -- number of training points
+--n_train = 11 -- number of training points
 n_test :: Num p => p
 n_test = 50 -- number of testing points
 s_noise :: Fractional p => p
 s_noise = 0.00005 -- noise variance (so that we don't have perfect fit), assuming gaussian
-x_start :: Fractional p => p
-x_start = 0.01
-x_fin :: Fractional p => p
-x_fin = 1
+--x_start :: Fractional p => p
+--x_start = 0.01
+--x_fin :: Fractional p => p
+--x_fin = 1
 
 -- get a random matrix based on your seed
 -- r c are number of rows and columns
@@ -49,11 +49,13 @@ randMat r c seed dist = reshape c $ randomVector seed dist (r*c)
 -- get random dataset for problem
 -- xset is a vector of numbers uniformly sampled from -5 to 5
 -- TODO generalise this, I guess
-xset = (x_fin-x_start)*(randomVector seed Uniform n_train)+x_start
+--xset = (x_fin-x_start)*(randomVector seed Uniform n_train)+x_start
 -- xset = NLA.vector [-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 -- add noise with mean 0, std s, Gaussian distributed
 -- TODO make distribution more general?
-yset = f xset + s_noise * randomVector seed Gaussian n_train
+--yset = f xset + s_noise * randomVector seed Gaussian n_train
+
+m = matrix 3 [1..9]
 
 -- squared exponential kernel
 -- a and b are datasets, param is the kernel parameters
@@ -66,46 +68,73 @@ yset = f xset + s_noise * randomVector seed Gaussian n_train
 -- a = vector [1..10]
 -- b = vector [3,5..21]
 -- ker_se :: Monad m => Vector R -> Vector R -> Matrix R -> m (Matrix R)
-ker_se :: NLA.Matrix Float -> NLA.Matrix Float -> NLA.Matrix Double -> NLA.Matrix R
+-- ker_se :: NLA.Vector Double -> NLA.Vector Double -> NLA.Matrix Double -> NLA.Matrix R
+--ker_se :: NLA.Matrix R -> NLA.Matrix R -> NLA.Matrix R -> NLA.Matrix R
 ker_se a b param = do
   -- TODO will have to change this significantly for n-dimensional case
-  let aa = repmat (col (toList (a^^2))) 1 (size b)
-  let bb = repmat (row (toList (b^^2))) (size a) 1
-  let sqdist = aa + bb - 2 * (a `outer` b)
+  let a_sum = flatten (matrix_row_sum (a^^2))
+  let b_sum = flatten (matrix_row_sum (b^^2))
+  let aa = repmat (col (toList a_sum)) 1 (size b_sum)
+  let bb = repmat (row (toList b_sum)) (size a_sum) 1
+--  let aa = a^^2
+--  let bb = b^^2
+  let sqdist = aa + bb - 2 * (a NLA.<> (tr b))
+--  let sqdist = aa
   (exp (-0.5 * (1/param) * sqdist))
 
--- sample some input points and noisy versions of the function at these points
 ker_val = 0.1
-k = ker_se xset xset ker_val
-s_m_iden_n = diagl (replicate n_train s_noise)
-Just lt = mbChol (trustSym (k + s_m_iden_n))
-l = tr lt
---Just ch = mbChol (trustSym (k + s_m_iden_n))
---l = cholSolve ch (k + s_m_iden_n)
 
--- points we make the prediction at
---x_test = linspace n_test (-5,5::Double)
-x_test = linspace n_test (x_start, x_fin)
+main = do
+  dat <- readcsv "h3o_snippet.txt"
+  let xset = dat ¿ [1,2,3,4,5,6] -- TODO ? generality
+  let yset = dat ¿ [0]
+  let (n_train, d) = size xset
+  -- sample some input points and noisy versions of the function at these points
+  let k = ker_se xset xset ker_val
 
--- computing the mean at our points
-k_t = ker_se xset x_test ker_val
-Just lk = linearSolve l k_t
-y_matrix = col (toList yset) -- (11,1)
-Just ysol = linearSolve l y_matrix
-mu = (tr lk) NLA.<> ysol
-{-Just lk = linearSolve l k_t
-y_matrix = col (toList yset)
-Just ly = linearSolve l y_matrix
-mu = (tr lk) NLA.<> ly-}
+  let s_m_iden_n = diagl (replicate n_train s_noise)
+  let Just lt = mbChol (trustSym (k + s_m_iden_n))
+  let l = tr lt
+  let x_maxs = [maximum (toList (flatten (xset ¿ [i]))) | i <- [0..d-1]]
+  let x_mins = [minimum (toList (flatten (xset ¿ [i]))) | i <- [0..d-1]]
 
--- computing the variance at our test points
-k_test = ker_se x_test x_test ker_val
-(k_t_x, k_t_y) = size k_test
-k_test_diag = col (replicate k_t_x 1)
-lk_2_sum = matrix_col_sum (lk ^^ 2)
-s2 = k_test_diag - lk_2_sum
-s = sqrt s2
+  --Just ch = mbChol (trustSym (k + s_m_iden_n))
+  --l = cholSolve ch (k + s_m_iden_n)
 
+  -- points we make the prediction at
+  let x_test = fromColumns [linspace n_test (x_maxs !! i, x_mins !! i) | i <- [0..d-1]]
+
+  -- computing the mean at our points
+  let k_t = ker_se xset x_test ker_val
+  let Just lk = linearSolve l k_t
+  --let y_matrix = col (toList yset) -- (11,1)
+  let Just ysol = linearSolve l yset
+  let mu = (tr lk) NLA.<> ysol
+  {-Just lk = linearSolve l k_t
+  y_matrix = col (toList yset)
+  Just ly = linearSolve l y_matrix
+  mu = (tr lk) NLA.<> ly-}
+
+  -- computing the variance at our test points
+  let k_test = ker_se x_test x_test ker_val
+  let (k_t_x, k_t_y) = size k_test
+  let k_test_diag = col (replicate k_t_x 1)
+  let lk_2_sum = matrix_col_sum (lk ^^ 2)
+  let s2 = k_test_diag - lk_2_sum
+  let s = sqrt s2
+  let s_l = toList (flatten s)
+
+  let mu_l = toList (flatten mu)
+  let zpe = minimum mu_l
+  -- . is function composition
+  let arg_zpe = head $ filter ((== zpe) . (mu_l !!)) [0..]
+
+  -- TODO ? I guess ? plot
+  -- returns predicted zero-point energy, its standard deviation, the conformation,
+  -- and (to compare) the conformations of all input with their energies
+  return (zpe, s_l !! arg_zpe, xset ? [arg_zpe], xset, yset)
+
+{-
 -- prepare for plots
 x_y_p = pairing (toList xset) (toList yset)
 x_fxt_p = pairing (toList x_test) (toList (f (x_test)))
@@ -207,6 +236,8 @@ f_posterior_graph = toFile def "f_posterior.png" $ do
   plot (line "posterior_8" [posterior_8])
   plot (line "posterior_9" [posterior_9])
 -}
+-}
+
 -- Helper functions
 -- It will produce a matrix that sums up all the columns together
 -- m is a Matrix R
@@ -215,6 +246,17 @@ matrix_col_sum m = do
   let (_, c) = size m
   let f_list = map (\i -> sum_helper m i) [0..(c-1)]
   col f_list
+
+matrix_row_sum :: NLA.Matrix R -> NLA.Matrix R
+matrix_row_sum m = do
+  let (r, _) = size m
+  let f_list = map (\i -> sum_row_helper m i) [0..(r-1)]
+  col f_list
+
+-- Sums up a specific column in the matrix
+sum_row_helper m i = do
+  let col = m ? [i]
+  sum (toList (flatten col))
 
 -- Sums up a specific column in the matrix
 sum_helper m i = do

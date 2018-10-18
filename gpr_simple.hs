@@ -110,7 +110,7 @@ mean_pred = toFile def "mean_pred.png" $ do
   layout_title .= "Mean predictions"
   plot (points "original data" x_y_p)
   plot (line "x_test against f(x_test)" [x_fxt_p])
-  plot (line "x_set against average" [x_mu_p])
+  plot (line "x_test against average" [x_mu_p])
 
 -- draw samples from the prior
 -- TODO figure out what the last parameter (0.000001) is for
